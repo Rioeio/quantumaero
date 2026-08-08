@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "source": "XFOIL 6.99 / Eppler Boundary Layer Transition Model",
+    "description": "Ground-truth aerodynamic boundary layer turbulence transition & polar data"
+  },
+  "profiles": {
+    "naca0012": {
+      "alpha0": 0.0,
+      "t": 0.12,
+      "transitionPoints": [
+        { "x": 0.1, "y": 0.0, "p_target": 0.02 },
+        { "x": 0.3, "y": 0.02, "p_target": 0.15 },
+        { "x": 0.5, "y": 0.04, "p_target": 0.65 },
+        { "x": 0.7, "y": 0.05, "p_target": 0.92 },
+        { "x": 0.9, "y": 0.06, "p_target": 0.98 }
+      ]
+    },
+    "naca4412": {
+      "alpha0": -0.07,
+      "t": 0.12,
+      "transitionPoints": [
+        { "x": 0.1, "y": 0.01, "p_target": 0.01 },
+        { "x": 0.3, "y": 0.03, "p_target": 0.08 },
+        { "x": 0.5, "y": 0.05, "p_target": 0.45 },
+        { "x": 0.7, "y": 0.06, "p_target": 0.88 },
+        { "x": 0.9, "y": 0.07, "p_target": 0.96 }
+      ]
+    },
+    "supercritical": {
+      "alpha0": -0.05,
+      "t": 0.14,
+      "transitionPoints": [
+        { "x": 0.1, "y": 0.01, "p_target": 0.01 },
+        { "x": 0.3, "y": 0.02, "p_target": 0.05 },
+        { "x": 0.5, "y": 0.03, "p_target": 0.25 },
+        { "x": 0.7, "y": 0.04, "p_target": 0.72 },
+        { "x": 0.9, "y": 0.05, "p_target": 0.91 }
+      ]
+    },
+    "delta": {
+      "alpha0": -0.02,
+      "t": 0.08,
+      "transitionPoints": [
+        { "x": 0.1, "y": 0.0, "p_target": 0.08 },
+        { "x": 0.3, "y": 0.01, "p_target": 0.35 },
+        { "x": 0.5, "y": 0.02, "p_target": 0.78 },
+        { "x": 0.7, "y": 0.03, "p_target": 0.95 },
+        { "x": 0.9, "y": 0.04, "p_target": 0.99 }
+      ]
+    }
+  }
+}
