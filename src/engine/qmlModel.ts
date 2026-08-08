@@ -222,16 +222,28 @@ export class QMLTurbulencePredictor {
     const currentAoA = this.fluidSolver.aoa;
     const currentRe = this.fluidSolver.reynolds;
 
+    const AoA_norm = (currentAoA + 5) / 25.0;
+    const Re_norm = Math.log10(currentRe) / 7.0;
+
     const results: AirfoilBenchmarkItem[] = [];
+    const sampleXs = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
 
     for (const preset of presets) {
       tempSolver.setParameters(preset.id, currentAoA, currentRe, 60.0);
       const metrics = tempSolver.calculateAerodynamicMetrics();
 
-      const turbRisk = metrics.turbRisk;
-      const qmlDragReduction = Math.max(1.5, parseFloat((45.0 - turbRisk * 0.4).toFixed(1)));
+      // Sample VQC predicted turbulence probability across boundary layer points
+      let vqcTurbSum = 0;
+      for (const x of sampleXs) {
+        const yUpper = tempSolver.interpolateUpperY(x) + 0.02;
+        vqcTurbSum += this.vqc.predictTurbulenceProbability(x, yUpper, Re_norm, AoA_norm);
+      }
+      const meanVqcTurb = vqcTurbSum / sampleXs.length;
 
-      let scoreNum = metrics.LD * 1.5 - turbRisk * 0.3;
+      // Compute QML Drag Reduction directly from VQC turbulence expectation output
+      const qmlDragReduction = Math.max(1.0, parseFloat(((1.0 - meanVqcTurb) * 35.0).toFixed(1)));
+
+      let scoreNum = metrics.LD * 1.5 - meanVqcTurb * 30.0;
       if (metrics.isStalled) scoreNum *= 0.4;
       const score = Math.min(99.0, Math.max(10.0, scoreNum)).toFixed(1);
 
@@ -241,7 +253,7 @@ export class QMLTurbulencePredictor {
         Cl: metrics.Cl,
         Cd: metrics.Cd,
         LD: metrics.LD,
-        turbRisk,
+        turbRisk: parseFloat((meanVqcTurb * 100).toFixed(1)),
         qmlDragReduction: `${qmlDragReduction}%`,
         score,
         isWinner: false,
