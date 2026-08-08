@@ -41,22 +41,51 @@ export class FluidSolver {
     this.generateAirfoilGeometry();
   }
 
+  getThicknessRatio(): number {
+    if (this.airfoilType === 'naca0012') return 0.12;
+    if (this.airfoilType === 'naca4412') return 0.12;
+    if (this.airfoilType === 'supercritical') return 0.14;
+    if (this.airfoilType === 'delta') return 0.08;
+    return 0.12;
+  }
+
+  calculateCl(): { Cl: number; isStalled: boolean } {
+    const radAoa = (this.aoa * Math.PI) / 180.0;
+    let alpha0 = -0.04;
+    if (this.airfoilType === 'naca0012') alpha0 = 0.0;
+    else if (this.airfoilType === 'naca4412') alpha0 = -0.07;
+    else if (this.airfoilType === 'supercritical') alpha0 = -0.05;
+    else if (this.airfoilType === 'delta') alpha0 = -0.02;
+
+    let Cl = 2.0 * Math.PI * (radAoa - alpha0);
+    const stallAngle = 14.0;
+    const isStalled = this.aoa > stallAngle;
+
+    if (isStalled) {
+      const stallDelta = this.aoa - stallAngle;
+      Cl = Cl * Math.exp(-0.15 * stallDelta) + 0.3 * Math.sin(2 * radAoa);
+    }
+
+    return { Cl, isStalled };
+  }
+
   generateAirfoilGeometry() {
     const numPoints = 60;
     this.points = [];
     this.upperBoundary = [];
     this.lowerBoundary = [];
 
-    let m = 0.04, p = 0.4, t = 0.12;
+    let m = 0.04, p = 0.4;
+    const t = this.getThicknessRatio();
 
     if (this.airfoilType === 'naca0012') {
-      m = 0.0; p = 0.0; t = 0.12;
+      m = 0.0; p = 0.0;
     } else if (this.airfoilType === 'naca4412') {
-      m = 0.04; p = 0.4; t = 0.12;
+      m = 0.04; p = 0.4;
     } else if (this.airfoilType === 'supercritical') {
-      m = 0.02; p = 0.35; t = 0.14;
+      m = 0.02; p = 0.35;
     } else if (this.airfoilType === 'delta') {
-      m = 0.06; p = 0.5; t = 0.08;
+      m = 0.06; p = 0.5;
     }
 
     for (let i = 0; i <= numPoints; i++) {
@@ -120,8 +149,8 @@ export class FluidSolver {
     const dy = y - yc;
     const r2 = dx * dx + dy * dy + 1e-4;
 
-    const cl_approx = 2.0 * Math.PI * (radAoa + 0.05);
-    const gamma = 0.5 * this.uInf * cl_approx;
+    const { Cl, isStalled } = this.calculateCl();
+    const gamma = 0.5 * this.uInf * Cl;
 
     const u_vortex = (gamma / (2 * Math.PI)) * (dy / r2);
     const v_vortex = -(gamma / (2 * Math.PI)) * (dx / r2);
@@ -133,7 +162,6 @@ export class FluidSolver {
     u += u_vortex + u_source;
     v += v_vortex + v_source;
 
-    const isStalled = this.aoa > 14.0;
     if (x > 0.4 && y > 0.0 && isStalled) {
       const wakeFactor = Math.min(1.0, (x - 0.4) * 1.5);
       const turbulenceNoise = (Math.random() - 0.5) * 0.4 * this.uInf * wakeFactor;
@@ -181,29 +209,18 @@ export class FluidSolver {
   }
 
   calculateAerodynamicMetrics(): AerodynamicMetrics {
-    const radAoa = (this.aoa * Math.PI) / 180.0;
-    let alpha0 = -0.04;
-    if (this.airfoilType === 'naca0012') alpha0 = 0.0;
-    if (this.airfoilType === 'naca4412') alpha0 = -0.07;
-    if (this.airfoilType === 'supercritical') alpha0 = -0.05;
+    const { Cl, isStalled } = this.calculateCl();
 
-    let Cl = 2.0 * Math.PI * (radAoa - alpha0);
-    const stallAngle = 14.0;
-    const isStalled = this.aoa > stallAngle;
-
-    if (isStalled) {
-      const stallDelta = this.aoa - stallAngle;
-      Cl = Cl * Math.exp(-0.15 * stallDelta) + 0.3 * Math.sin(2 * radAoa);
-    }
-
+    const t = this.getThicknessRatio();
     const Cf = 0.074 / Math.pow(this.reynolds, 0.2);
-    const Cd_friction = 2.0 * Cf * (1.0 + 2.0 * 0.12);
+    const Cd_friction = 2.0 * Cf * (1.0 + 2.0 * t);
 
     const aspect_ratio = 6.0;
     const oswald_e = 0.85;
     let Cd_pressure = (Cl * Cl) / (Math.PI * aspect_ratio * oswald_e);
 
     if (isStalled) {
+      const stallAngle = 14.0;
       Cd_pressure += 0.08 * Math.pow(this.aoa - stallAngle, 1.5);
     }
 
