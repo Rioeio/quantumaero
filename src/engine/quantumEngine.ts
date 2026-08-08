@@ -76,7 +76,7 @@ export class QuantumEngine {
   rz(qubit: number, theta: number) {
     const c = Math.cos(theta / 2);
     const s = Math.sin(theta / 2);
-    this.applySingleGate(qubit, c, -s, c, s, 0, 0, 0, 0);
+    this.applySingleGate(qubit, c, -s, 0, 0, 0, 0, c, s);
   }
 
   cnot(control: number, target: number) {
