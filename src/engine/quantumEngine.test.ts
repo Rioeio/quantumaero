@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { QuantumEngine } from './quantumEngine';
+import { QuantumEngine, VQCTurbulenceModel } from './quantumEngine';
 
 describe('QuantumEngine RZ Gate Tests', () => {
   it('applies H then RZ(theta) for several theta angles and asserts state normalization to 1e-9', () => {
@@ -58,4 +58,24 @@ describe('QuantumEngine RZ Gate Tests', () => {
     expect(qe.real[3]).toBe(0);
     expect(qe.imag[3]).toBe(0);
   });
+
+  it('trains a 1-qubit toy circuit toward a known target expectation value and confirms loss decreases over 20 steps using parameter-shift rule', () => {
+    const vqc = new VQCTurbulenceModel(1, 1, 'real_amplitudes');
+    vqc.params[0] = 2.5;
+
+    const dataset = [
+      { x: 0.1, y: 0.0, Re: 0.5, AoA: 0.1, p_target: 0.1 }
+    ];
+
+    const initialLoss = vqc.computeBatchLoss(dataset);
+
+    for (let step = 0; step < 20; step++) {
+      vqc.trainStep(dataset, 0.1);
+    }
+
+    const finalLoss = vqc.computeBatchLoss(dataset);
+
+    expect(finalLoss).toBeLessThan(initialLoss);
+  });
 });
+
