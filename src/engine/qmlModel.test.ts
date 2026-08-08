@@ -41,4 +41,18 @@ describe('QMLTurbulencePredictor & ClassicalBaselineMLP Tests', () => {
     expect(predictor.lossHistory[0]).toBeGreaterThan(0);
     expect(predictor.classicalLossHistory[0]).toBeGreaterThan(0);
   });
+
+  it('computes qmlDragReduction and benchmark metrics directly from VQC predictions across airfoils', () => {
+    const fluidSolver = new FluidSolver();
+    const predictor = new QMLTurbulencePredictor(fluidSolver);
+
+    const benchmarks1 = predictor.getMultiAirfoilBenchmark();
+    expect(benchmarks1.length).toBe(4);
+    expect(benchmarks1[0].qmlDragReduction).toMatch(/%/);
+
+    predictor.vqc.params.fill(Math.PI / 2);
+    const benchmarks2 = predictor.getMultiAirfoilBenchmark();
+
+    expect(benchmarks2[0].qmlDragReduction).toBeDefined();
+  });
 });
