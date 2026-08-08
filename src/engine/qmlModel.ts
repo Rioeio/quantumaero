@@ -1,5 +1,6 @@
 import { VQCTurbulenceModel } from './quantumEngine';
 import { FluidSolver } from './fluidSolver';
+import xfoilPolars from '../fixtures/xfoil_polars.json';
 
 export interface AirfoilBenchmarkItem {
   id: string;
@@ -147,11 +148,25 @@ export class QMLTurbulencePredictor {
     const AoA_norm = (this.fluidSolver.aoa + 5) / 25.0;
     const Re_norm = Math.log10(this.fluidSolver.reynolds) / 7.0;
 
+    const profileKey = (this.fluidSolver.airfoilType in xfoilPolars.profiles)
+      ? (this.fluidSolver.airfoilType as keyof typeof xfoilPolars.profiles)
+      : 'naca4412';
+    const profileData = xfoilPolars.profiles[profileKey];
+
     for (let x = 0; x <= 1.0; x += 0.1) {
       for (let y = -0.2; y <= 0.2; y += 0.05) {
-        let p_target = 0.1;
-        if (x > 0.3 && Math.abs(y) < 0.08) {
-          p_target = Math.min(1.0, 0.1 + (x - 0.3) * 1.5 + AoA_norm * 0.5);
+        let closestPt = profileData.transitionPoints[0];
+        let minDist = Infinity;
+        for (const pt of profileData.transitionPoints) {
+          const dist = Math.abs(pt.x - x);
+          if (dist < minDist) {
+            minDist = dist;
+            closestPt = pt;
+          }
+        }
+        let p_target = closestPt.p_target;
+        if (x > 0.4 && Math.abs(y) > 0.05) {
+          p_target = Math.min(1.0, p_target * (1.0 + AoA_norm * 0.3));
         }
         samples.push({ x, y, Re: Re_norm, AoA: AoA_norm, p_target });
       }

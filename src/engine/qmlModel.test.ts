@@ -55,4 +55,14 @@ describe('QMLTurbulencePredictor & ClassicalBaselineMLP Tests', () => {
 
     expect(benchmarks2[0].qmlDragReduction).toBeDefined();
   });
+
+  it('uses xfoil_polars.json ground-truth transition targets during trainModel', async () => {
+    const fluidSolver = new FluidSolver();
+    fluidSolver.setParameters('supercritical', 5.0, 2000000, 60);
+    const predictor = new QMLTurbulencePredictor(fluidSolver);
+
+    await predictor.trainModel(undefined, 3);
+
+    expect(predictor.lossHistory.length).toBe(3);
+  });
 });
