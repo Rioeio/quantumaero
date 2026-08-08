@@ -1,4 +1,4 @@
-# ✈️ QuantumAero
+# QuantumAero
 
 > **Quantum Machine Learning (QML) Fluid Dynamics & Quantum Aerodynamics Simulation Suite with a 1980s Retro CRT Terminal Interface.**
 
@@ -10,7 +10,7 @@
 
 ---
 
-## 🌟 Overview
+## Overview
 
 **QuantumAero** is an interactive web platform designed to simulate fluid motion, predict airflow patterns, and estimate boundary layer turbulence occurrence probability ($P_{\text{turb}}$) around airplane wings using **Quantum Machine Learning (QML)** and **Quantum Emulation**.
 
@@ -18,16 +18,16 @@ The application features a **retro-futuristic 1980s CRT terminal theme** complet
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### ⚛️ 1. Parameterized Variational Quantum Circuit (VQC) Engine
+### 1. Parameterized Variational Quantum Circuit (VQC) Engine
 - **$2^N$ Complex Statevector Simulator**: Supports 2 to 6 qubits with exact amplitude calculations.
 - **Unitary Gate Transformations**: Hadamard ($H$), $R_x(\theta)$, $R_y(\theta)$, $R_z(\theta)$, and entangling $CNOT$ gates.
 - **Ansatz Topologies**: `RealAmplitudes`, `StronglyEntangling`, and `Physics-Informed VQC (QPINN)`.
 - **Parameter-Shift Rule Optimization**: Analytical quantum gradient calculations for learning turbulence boundaries.
 - **Quantum Info Metrics**: Pauli-Z expectation values $\langle Z_k \rangle$ and von Neumann Entanglement Entropy $S(\rho)$.
 
-### 🌊 2. High-Performance Aerodynamics & Potential Flow Solver
+### 2. High-Performance Aerodynamics & Potential Flow Solver
 - **Parametric Airfoil Generator**: Cosine-spaced panel distribution for:
   - **NACA 0012**: Symmetric trainer profile.
   - **NACA 4412**: Cambered wing profile.
@@ -35,18 +35,18 @@ The application features a **retro-futuristic 1980s CRT terminal theme** complet
   - **Delta Wing**: High Angle of Attack vortex lift profile.
 - **Field Analytics**: Real-time velocity field $(u,v)$, Pressure Coefficient ($C_p = 1 - (V/U_\infty)^2$), Lift ($C_L$), Drag ($C_D$), $L/D$ ratio, and Stall Alerting ($\alpha > 14^\circ$).
 
-### ⚡ 3. Quantum Walk (QW) Transport Emulator
+### 3. Quantum Walk (QW) Transport Emulator
 - Simulates discrete 1D/2D Quantum Walks with Hadamard coin operators.
 - Demonstrates ballistic momentum transport ($\sigma \propto t$) vs classical Gaussian diffusion ($\sigma \propto \sqrt{t}$).
 
-### 📟 4. 1980s Retro CRT Aesthetics & Web Audio Synthesizer
-- **3 Color Palettes**: 🟢 Phosphor Green (1980s Mainframe), 🟠 Amber Command (1970s Radar), 🩷 Synthwave Cyber (1984 Cyberpunk).
+### 4. 1980s Retro CRT Aesthetics & Web Audio Synthesizer
+- **3 Color Palettes**: Phosphor Green (1980s Mainframe), Amber Command (1970s Radar), Synthwave Cyber (1984 Cyberpunk).
 - **CRT Glass Effects**: Real-time CRT scanline raster overlay, phosphor text glow shadows, and screen glare curvature.
 - **Web Audio API Sound Effects**: Synthesizes mechanical switch clicks, analog knob adjustments, and alarm beeps dynamically.
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - [Node.js](https://nodejs.org/) (v18.0 or higher)
@@ -78,7 +78,7 @@ The application features a **retro-futuristic 1980s CRT terminal theme** complet
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 quantumaero/
@@ -104,6 +104,6 @@ quantumaero/
 
 ---
 
-## 📜 License
+## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
