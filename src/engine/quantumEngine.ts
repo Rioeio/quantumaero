@@ -19,7 +19,7 @@ export class QuantumEngine {
   }
 
   setQubitCount(n: number) {
-    this.numQubits = Math.max(2, Math.min(6, n));
+    this.numQubits = Math.max(1, Math.min(6, n));
     this.numStates = 1 << this.numQubits;
     this.real = new Float64Array(this.numStates);
     this.imag = new Float64Array(this.numStates);
@@ -172,9 +172,11 @@ export class VQCTurbulenceModel {
           this.engine.rz(q, this.params[idx++]);
         }
       }
-      for (let q = 0; q < this.numQubits; q++) {
-        const nextQubit = (q + 1) % this.numQubits;
-        this.engine.cnot(q, nextQubit);
+      if (this.numQubits > 1) {
+        for (let q = 0; q < this.numQubits; q++) {
+          const nextQubit = (q + 1) % this.numQubits;
+          this.engine.cnot(q, nextQubit);
+        }
       }
     }
   }
@@ -197,20 +199,39 @@ export class VQCTurbulenceModel {
     return p_turb;
   }
 
-  trainStep(trainingData: { x: number; y: number; Re: number; AoA: number; p_target: number }[], lr = 0.08): number {
+  computeBatchLoss(trainingData: { x: number; y: number; Re: number; AoA: number; p_target: number }[]): number {
     let totalLoss = 0.0;
     for (const sample of trainingData) {
       const pred = this.predictTurbulenceProbability(sample.x, sample.y, sample.Re, sample.AoA);
       const diff = pred - sample.p_target;
       totalLoss += diff * diff;
     }
-    const mseLoss = totalLoss / Math.max(1, trainingData.length);
+    return totalLoss / Math.max(1, trainingData.length);
+  }
 
-    for (let i = 0; i < this.params.length; i++) {
-      const gradSim = (Math.random() - 0.5) * 0.02 * Math.sqrt(mseLoss);
-      this.params[i] -= lr * gradSim;
+  trainStep(trainingData: { x: number; y: number; Re: number; AoA: number; p_target: number }[], lr = 0.08): number {
+    const currentLoss = this.computeBatchLoss(trainingData);
+    const grads = new Float64Array(this.params.length);
+    const shift = Math.PI / 2;
+
+    for (let j = 0; j < this.params.length; j++) {
+      const orig = this.params[j];
+
+      this.params[j] = orig + shift;
+      const lPlus = this.computeBatchLoss(trainingData);
+
+      this.params[j] = orig - shift;
+      const lMinus = this.computeBatchLoss(trainingData);
+
+      this.params[j] = orig;
+      grads[j] = (lPlus - lMinus) / 2.0;
     }
-    return mseLoss;
+
+    for (let j = 0; j < this.params.length; j++) {
+      this.params[j] -= lr * grads[j];
+    }
+
+    return currentLoss;
   }
 
   getExpectationValues(): number[] {
