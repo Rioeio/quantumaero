@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { QuantumEngine, VQCTurbulenceModel } from './quantumEngine';
 
-describe('QuantumEngine RZ Gate Tests', () => {
+describe('QuantumEngine RZ Gate & Circuit Integrity Tests', () => {
   it('applies H then RZ(theta) for several theta angles and asserts state normalization to 1e-9', () => {
     const angles = [0, Math.PI / 6, Math.PI / 4, Math.PI / 3, Math.PI / 2, Math.PI, 2.5, 5.0, Math.PI * 2];
 
@@ -59,6 +59,61 @@ describe('QuantumEngine RZ Gate Tests', () => {
     expect(qe.imag[3]).toBe(0);
   });
 
+  it('checks RX and RY rotation gates against analytic matrices and asserts state normalization to 1e-9', () => {
+    const theta = Math.PI / 4;
+    const halfTheta = theta / 2;
+
+    // Test RX
+    const qeRx = new QuantumEngine(2);
+    qeRx.rx(0, theta);
+
+    let normRx = 0;
+    for (let i = 0; i < qeRx.numStates; i++) {
+      normRx += qeRx.real[i] * qeRx.real[i] + qeRx.imag[i] * qeRx.imag[i];
+    }
+    expect(Math.abs(normRx - 1.0)).toBeLessThan(1e-9);
+    expect(qeRx.real[0]).toBeCloseTo(Math.cos(halfTheta), 10);
+    expect(qeRx.imag[0]).toBe(0);
+    expect(qeRx.real[1]).toBe(0);
+    expect(qeRx.imag[1]).toBeCloseTo(-Math.sin(halfTheta), 10);
+
+    // Test RY
+    const qeRy = new QuantumEngine(2);
+    qeRy.ry(0, theta);
+
+    let normRy = 0;
+    for (let i = 0; i < qeRy.numStates; i++) {
+      normRy += qeRy.real[i] * qeRy.real[i] + qeRy.imag[i] * qeRy.imag[i];
+    }
+    expect(Math.abs(normRy - 1.0)).toBeLessThan(1e-9);
+    expect(qeRy.real[0]).toBeCloseTo(Math.cos(halfTheta), 10);
+    expect(qeRy.imag[0]).toBe(0);
+    expect(qeRy.real[1]).toBeCloseTo(Math.sin(halfTheta), 10);
+    expect(qeRy.imag[1]).toBe(0);
+  });
+
+  it('verifies CNOT entangling gate creates maximally-entangled Bell state (|00> + |11>)/sqrt(2)', () => {
+    const qe = new QuantumEngine(2);
+    qe.h(0);
+    qe.cnot(0, 1);
+
+    let normSum = 0;
+    for (let i = 0; i < qe.numStates; i++) {
+      normSum += qe.real[i] * qe.real[i] + qe.imag[i] * qe.imag[i];
+    }
+    expect(Math.abs(normSum - 1.0)).toBeLessThan(1e-9);
+
+    const invSqrt2 = 1 / Math.sqrt(2);
+    expect(qe.real[0]).toBeCloseTo(invSqrt2, 10); // |00>
+    expect(qe.real[1]).toBe(0);                  // |01>
+    expect(qe.real[2]).toBe(0);                  // |10>
+    expect(qe.real[3]).toBeCloseTo(invSqrt2, 10); // |11>
+
+    // Entanglement entropy for maximally entangled state = ln(2)
+    const entropy = qe.getEntanglementEntropy();
+    expect(entropy).toBeCloseTo(Math.LN2, 5);
+  });
+
   it('trains a 1-qubit toy circuit toward a known target expectation value and confirms loss decreases over 20 steps using parameter-shift rule', () => {
     const vqc = new VQCTurbulenceModel(1, 1, 'real_amplitudes');
     vqc.params[0] = 2.5;
@@ -78,4 +133,3 @@ describe('QuantumEngine RZ Gate Tests', () => {
     expect(finalLoss).toBeLessThan(initialLoss);
   });
 });
-
