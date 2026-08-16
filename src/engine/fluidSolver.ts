@@ -1,3 +1,5 @@
+import { getReferenceDataset, AirfoilReferenceDataset } from './referenceData';
+
 export interface Point {
   x: number;
   y: number;
@@ -17,6 +19,17 @@ export interface AerodynamicMetrics {
   LD: number;
   turbRisk: number;
   isStalled: boolean;
+}
+
+export interface ValidationMetrics {
+  airfoil: string;
+  alpha: number;
+  source: string;
+  rmse: number;
+  r2: number;
+  maxError: number;
+  samplePoints: number;
+  comparison: { x: number; cpUpperSim: number; cpUpperRef: number; cpLowerSim: number; cpLowerRef: number }[];
 }
 
 export class FluidSolver {
@@ -173,6 +186,109 @@ export class FluidSolver {
     const Cp = 1.0 - Math.pow(speed / this.uInf, 2);
 
     return { u, v, speed, Cp, isInside: false };
+  }
+
+  getSurfaceCpDistribution(numPoints = 20): { x: number; cpUpper: number; cpLower: number }[] {
+    const results: { x: number; cpUpper: number; cpLower: number }[] = [];
+    const radAoa = (this.aoa * Math.PI) / 180.0;
+    const t = this.getThicknessRatio();
+    const { Cl } = this.calculateCl();
+
+    for (let i = 0; i < numPoints; i++) {
+      const x = Math.min(0.99, Math.max(0.01, (i / (numPoints - 1))));
+      const gamma_x = 0.5 * (Cl / Math.PI) * Math.sqrt((1 - x) / (x + 0.01)) * (1.0 - 0.2 * x);
+      const vt_x = Math.cos(radAoa) + 1.2 * t * Math.sqrt(1 - x) * (1 - x);
+
+      const vUpper = vt_x + gamma_x;
+      const vLower = Math.max(0.1, vt_x - gamma_x);
+
+      const cpUpper = 1.0 - vUpper * vUpper;
+      const cpLower = 1.0 - vLower * vLower;
+
+      results.push({
+        x: parseFloat(x.toFixed(3)),
+        cpUpper: parseFloat(cpUpper.toFixed(3)),
+        cpLower: parseFloat(cpLower.toFixed(3))
+      });
+    }
+
+    return results;
+  }
+
+  validateAgainstReferenceData(): ValidationMetrics {
+    const refData = getReferenceDataset(this.airfoilType, this.aoa);
+    const radAoa = (this.aoa * Math.PI) / 180.0;
+    const t = this.getThicknessRatio();
+    const { Cl } = this.calculateCl();
+
+    let sumSqErr = 0;
+    let sumRef = 0;
+    let maxErr = 0;
+
+    refData.points.forEach(ref => {
+      sumRef += ref.cpUpper + ref.cpLower;
+    });
+    const meanRef = sumRef / (refData.points.length * 2);
+    const comparison: ValidationMetrics['comparison'] = [];
+
+    refData.points.forEach(ref => {
+      const x = ref.x === 0 ? 0.005 : Math.min(0.995, ref.x);
+      const gamma_x = 0.5 * (Cl / Math.PI) * Math.sqrt((1 - x) / (x + 0.01)) * (1.0 - 0.2 * x);
+      const vt_x = Math.cos(radAoa) + 1.2 * t * Math.sqrt(1 - x) * (1 - x);
+
+      const vUpper = vt_x + gamma_x;
+      const vLower = Math.max(0.1, vt_x - gamma_x);
+
+      const cpUpperSim = parseFloat((1.0 - vUpper * vUpper).toFixed(3));
+      const cpLowerSim = parseFloat((1.0 - vLower * vLower).toFixed(3));
+
+      const errU = Math.abs(cpUpperSim - ref.cpUpper);
+      const errL = Math.abs(cpLowerSim - ref.cpLower);
+
+      sumSqErr += errU * errU + errL * errL;
+      maxErr = Math.max(maxErr, errU, errL);
+
+      comparison.push({
+        x: ref.x,
+        cpUpperSim,
+        cpUpperRef: ref.cpUpper,
+        cpLowerSim,
+        cpLowerRef: ref.cpLower
+      });
+    });
+
+    const n = refData.points.length * 2;
+    const rmse = Math.sqrt(sumSqErr / n);
+
+    let sumSim = 0;
+    comparison.forEach(c => {
+      sumSim += c.cpUpperSim + c.cpLowerSim;
+    });
+    const meanSim = sumSim / n;
+
+    let num = 0, denSim = 0, denRef = 0;
+    comparison.forEach(c => {
+      const devSimU = c.cpUpperSim - meanSim, devRefU = c.cpUpperRef - meanRef;
+      const devSimL = c.cpLowerSim - meanSim, devRefL = c.cpLowerRef - meanRef;
+
+      num += devSimU * devRefU + devSimL * devRefL;
+      denSim += devSimU * devSimU + devSimL * devSimL;
+      denRef += devRefU * devRefU + devRefL * devRefL;
+    });
+
+    const r = num / (Math.sqrt(denSim * denRef) + 1e-9);
+    const r2 = Math.min(1.0, Math.max(0, r * r));
+
+    return {
+      airfoil: this.airfoilType,
+      alpha: this.aoa,
+      source: refData.source,
+      rmse: parseFloat(rmse.toFixed(4)),
+      r2: parseFloat(r2.toFixed(4)),
+      maxError: parseFloat(maxErr.toFixed(4)),
+      samplePoints: refData.points.length,
+      comparison
+    };
   }
 
   isPointInsideAirfoil(x: number, y: number): boolean {

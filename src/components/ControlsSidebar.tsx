@@ -11,6 +11,11 @@ interface Props {
   viewMode: string; setViewMode: Dispatch<SetStateAction<any>>
   isTraining: boolean; trainEpoch: number
   onTrain: () => void
+  onExportCSV: () => void
+  onExportPNG: () => void
+  onExportConfig: () => void
+  onOpenValidation: () => void
+  onOpenTheory: () => void
 }
 
 function fmtRe(re: number): string {
@@ -138,6 +143,44 @@ export default function ControlsSidebar(props: Props) {
               {m.label}
             </button>
           ))}
+        </div>
+      </ControlSection>
+
+      {/* ── Section: Engineering Tools & Export ── */}
+      <ControlSection label="Engineering Tools & Export">
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={props.onOpenValidation}
+            className="w-full py-2 px-2.5 rounded bg-slate-800 text-sky-400 hover:bg-slate-700 font-medium text-[11px] transition-colors text-left"
+          >
+            NACA Cp Reference Validation
+          </button>
+          <button
+            onClick={props.onOpenTheory}
+            className="w-full py-2 px-2.5 rounded bg-slate-800 text-slate-200 hover:bg-slate-700 font-medium text-[11px] transition-colors text-left"
+          >
+            Theory & Math Documentation
+          </button>
+          <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-800/60">
+            <button
+              onClick={props.onExportCSV}
+              className="py-1.5 px-1 rounded bg-[#0b0f19] border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 text-[10px] font-mono text-center cursor-pointer"
+            >
+              CSV
+            </button>
+            <button
+              onClick={props.onExportPNG}
+              className="py-1.5 px-1 rounded bg-[#0b0f19] border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 text-[10px] font-mono text-center cursor-pointer"
+            >
+              PNG
+            </button>
+            <button
+              onClick={props.onExportConfig}
+              className="py-1.5 px-1 rounded bg-[#0b0f19] border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 text-[10px] font-mono text-center cursor-pointer"
+            >
+              JSON
+            </button>
+          </div>
         </div>
       </ControlSection>
 

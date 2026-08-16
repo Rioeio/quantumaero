@@ -1,8 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import CanvasViewport from './components/CanvasViewport'
 import ControlsSidebar from './components/ControlsSidebar'
 import BottomPanel from './components/BottomPanel'
+import ValidationModal from './components/ValidationModal'
+import TheoryModal from './components/TheoryModal'
 import { retroAudio } from './utils/retroAudio'
+import { FluidSolver } from './engine/fluidSolver'
+import { QMLTurbulencePredictor } from './engine/qmlModel'
+import { exportFlowfieldCSV, exportViewportPNG, exportRunConfigJSON } from './utils/exportUtils'
 
 const AIRFOIL_PRESETS = [
   'NACA 4412',
@@ -14,6 +19,8 @@ const AIRFOIL_PRESETS = [
 export default function App() {
   // Scientific UI State
   const [audioEnabled, setAudioEnabled] = useState<boolean>(false)
+  const [isValidationOpen, setIsValidationOpen] = useState<boolean>(false)
+  const [isTheoryOpen, setIsTheoryOpen] = useState<boolean>(false)
 
   // Aerodynamic parameters
   const [airfoil, setAirfoil] = useState('NACA 4412')
@@ -35,6 +42,20 @@ export default function App() {
   const [isTraining, setIsTraining] = useState(false)
   const [trainEpoch, setTrainEpoch] = useState(0)
   const [lossHistory, setLossHistory] = useState<{ vqc: number; classical: number }[]>([])
+
+  // Solver & QML Predictor instances
+  const fluidSolverRef = useRef(new FluidSolver())
+  const qmlPredictorRef = useRef(new QMLTurbulencePredictor(fluidSolverRef.current))
+
+  useEffect(() => {
+    let typeKey = 'naca4412'
+    if (airfoil.includes('0012')) typeKey = 'naca0012'
+    else if (airfoil.includes('4412')) typeKey = 'naca4412'
+    else if (airfoil.includes('64A')) typeKey = 'supercritical'
+    else if (airfoil.includes('Delta')) typeKey = 'delta'
+
+    fluidSolverRef.current.setParameters(typeKey, alpha, reynolds, airspeed)
+  }, [airfoil, alpha, reynolds, airspeed])
 
   // Sync audio toggle state
   useEffect(() => {
@@ -74,6 +95,22 @@ export default function App() {
         setIsTraining(false)
       }
     }, 60)
+  }
+
+  const handleExportCSV = () => {
+    exportFlowfieldCSV(fluidSolverRef.current, qmlPredictorRef.current)
+  }
+
+  const handleExportPNG = () => {
+    const canvas = document.querySelector('canvas')
+    exportViewportPNG(canvas)
+  }
+
+  const handleExportConfig = () => {
+    exportRunConfigJSON(
+      airfoil, alpha, reynolds, airspeed, vqcAnsatz, qubits, circuitDepth,
+      qmlPredictorRef.current, CL, CD, LD, isStalled
+    )
   }
 
   return (
@@ -160,6 +197,11 @@ export default function App() {
           viewMode={viewMode} setViewMode={setViewMode}
           isTraining={isTraining} trainEpoch={trainEpoch}
           onTrain={handleTrain}
+          onExportCSV={handleExportCSV}
+          onExportPNG={handleExportPNG}
+          onExportConfig={handleExportConfig}
+          onOpenValidation={() => setIsValidationOpen(true)}
+          onOpenTheory={() => setIsTheoryOpen(true)}
         />
 
         <CanvasViewport
@@ -184,6 +226,18 @@ export default function App() {
         lossHistory={lossHistory}
         alpha={alpha} airfoil={airfoil}
         CL={CL} CD={CD} LD={LD}
+      />
+
+      {/* Engineering Modals */}
+      <ValidationModal
+        isOpen={isValidationOpen}
+        onClose={() => setIsValidationOpen(false)}
+        solver={fluidSolverRef.current}
+      />
+
+      <TheoryModal
+        isOpen={isTheoryOpen}
+        onClose={() => setIsTheoryOpen(false)}
       />
     </div>
   )

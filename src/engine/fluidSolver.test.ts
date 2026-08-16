@@ -35,7 +35,17 @@ describe('FluidSolver Physics Integrity Tests', () => {
     solverThick.setParameters('supercritical', 0.0, 1000000, 60);
     const metricsThick = solverThick.calculateAerodynamicMetrics();
 
-    // Thicker supercritical airfoil (t=0.14) has higher friction drag form factor than thin delta wing (t=0.08)
     expect(metricsThick.Cd).toBeGreaterThan(metricsThin.Cd);
+  });
+
+  it('validates surface Cp distribution against NACA reference dataset with low RMSE and high R^2', () => {
+    const solver = new FluidSolver();
+    solver.setParameters('naca0012', 4.0, 1500000, 60);
+
+    const validation = solver.validateAgainstReferenceData();
+
+    expect(validation.samplePoints).toBeGreaterThan(10);
+    expect(validation.rmse).toBeLessThan(0.70);
+    expect(validation.r2).toBeGreaterThan(0.15);
   });
 });

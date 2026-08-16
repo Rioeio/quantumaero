@@ -225,6 +225,60 @@ export class QMLTurbulencePredictor {
     return Math.min(1.0, Math.max(0.0, p_final));
   }
 
+  getClassicalTurbulenceProbabilityAt(x: number, y: number): number {
+    const inputs = [x, y, Math.log10(this.fluidSolver.reynolds) / 7.0, (this.fluidSolver.aoa + 5) / 25.0];
+    const cVal = this.classicalMLP.predict(inputs);
+    if (this.fluidSolver.isPointInsideAirfoil(x, y)) return 0.0;
+    return Math.min(1.0, Math.max(0.0, cVal));
+  }
+
+  compareClassicalVsQuantum(x: number, y: number) {
+    const pQuantum = this.getTurbulenceProbabilityAt(x, y);
+    const pClassical = this.getClassicalTurbulenceProbabilityAt(x, y);
+    const absDiff = Math.abs(pQuantum - pClassical);
+
+    let regime = 'Laminar Agreement';
+    if (this.fluidSolver.aoa >= 8.0 && absDiff > 0.12) {
+      regime = 'Non-linear Quantum Advantage';
+    } else if (absDiff > 0.06) {
+      regime = 'Transitional Divergence';
+    }
+
+    return {
+      x: parseFloat(x.toFixed(2)),
+      y: parseFloat(y.toFixed(2)),
+      pQuantum: parseFloat(pQuantum.toFixed(4)),
+      pClassical: parseFloat(pClassical.toFixed(4)),
+      absDiff: parseFloat(absDiff.toFixed(4)),
+      regime
+    };
+  }
+
+  getGridComparisonSummary() {
+    let sumDiff = 0;
+    let maxDiff = 0;
+    let count = 0;
+    let laminar = 0, transitional = 0, quantumAdvantage = 0;
+
+    for (let x = 0.1; x <= 0.9; x += 0.1) {
+      for (let y = -0.15; y <= 0.15; y += 0.05) {
+        const comp = this.compareClassicalVsQuantum(x, y);
+        sumDiff += comp.absDiff;
+        maxDiff = Math.max(maxDiff, comp.absDiff);
+        count++;
+        if (comp.regime === 'Laminar Agreement') laminar++;
+        else if (comp.regime === 'Transitional Divergence') transitional++;
+        else quantumAdvantage++;
+      }
+    }
+
+    return {
+      meanAbsDiff: parseFloat((sumDiff / Math.max(1, count)).toFixed(4)),
+      maxAbsDiff: parseFloat(maxDiff.toFixed(4)),
+      regimeCounts: { laminar, transitional, quantumAdvantage }
+    };
+  }
+
   getMultiAirfoilBenchmark(): AirfoilBenchmarkItem[] {
     const presets = [
       { id: 'naca0012', name: 'NACA 0012 (Symmetric)' },

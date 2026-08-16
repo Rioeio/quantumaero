@@ -65,4 +65,19 @@ describe('QMLTurbulencePredictor & ClassicalBaselineMLP Tests', () => {
 
     expect(predictor.lossHistory.length).toBe(3);
   });
+
+  it('evaluates compareClassicalVsQuantum and grid comparison summary with regime honesty breakdown', () => {
+    const fluidSolver = new FluidSolver();
+    fluidSolver.setParameters('naca4412', 10.0, 1500000, 60);
+    const predictor = new QMLTurbulencePredictor(fluidSolver);
+
+    const comp = predictor.compareClassicalVsQuantum(0.5, 0.05);
+    expect(comp.pQuantum).toBeGreaterThanOrEqual(0);
+    expect(comp.pClassical).toBeGreaterThanOrEqual(0);
+    expect(comp.absDiff).toBeGreaterThanOrEqual(0);
+
+    const summary = predictor.getGridComparisonSummary();
+    expect(summary.meanAbsDiff).toBeGreaterThanOrEqual(0);
+    expect(summary.regimeCounts).toBeDefined();
+  });
 });
