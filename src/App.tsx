@@ -4,7 +4,7 @@ import ControlsSidebar from './components/ControlsSidebar'
 import BottomPanel from './components/BottomPanel'
 import ValidationModal from './components/ValidationModal'
 import TheoryModal from './components/TheoryModal'
-import { retroAudio } from './utils/retroAudio'
+import { audioSynth } from './utils/audioSynth'
 import { FluidSolver } from './engine/fluidSolver'
 import { QMLTurbulencePredictor } from './engine/qmlModel'
 import { exportFlowfieldCSV, exportViewportPNG, exportRunConfigJSON } from './utils/exportUtils'
@@ -59,7 +59,7 @@ export default function App() {
 
   // Sync audio toggle state
   useEffect(() => {
-    retroAudio.enabled = audioEnabled
+    audioSynth.enabled = audioEnabled
   }, [audioEnabled])
 
   // Derived aerodynamic forces
@@ -138,7 +138,7 @@ export default function App() {
               <button
                 key={p}
                 onClick={() => {
-                  retroAudio.playClick()
+                  audioSynth.playClick()
                   setAirfoil(p)
                 }}
                 className={`px-2.5 py-1 rounded text-[11px] font-medium transition-all cursor-pointer ${
@@ -158,7 +158,7 @@ export default function App() {
           <button
             onClick={() => {
               setAudioEnabled(!audioEnabled)
-              retroAudio.playClick()
+              audioSynth.playClick()
             }}
             className={`px-2.5 py-1 rounded border text-[11px] font-medium cursor-pointer transition-colors ${
               audioEnabled
@@ -171,7 +171,7 @@ export default function App() {
 
           <button
             onClick={() => {
-              retroAudio.playSwitch()
+              audioSynth.playSwitch()
               setIsRunning(!isRunning)
             }}
             className={`px-3 py-1 rounded border text-[11px] font-medium cursor-pointer transition-colors ${

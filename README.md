@@ -1,10 +1,10 @@
 # QuantumAero
 
-> **Open-Source Quantum Machine Learning (QML) Fluid Dynamics & Quantum Aerodynamics Simulation Suite with a 1980s Retro CRT Terminal Interface.**
+> **Open-Source Quantum Machine Learning (QML) Fluid Dynamics & Quantum Aerodynamics Simulation Suite.**
 
 ![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
 ![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?style=flat-square)
-![Tests](https://img.shields.io/badge/Vitest-13%2F13%20Passing-success?style=flat-square)
+![Tests](https://img.shields.io/badge/Vitest-15%2F15%20Passing-success?style=flat-square)
 ![Open Source](https://img.shields.io/badge/Open%20Source-Approved-green?style=flat-square)
 ![PRs](https://img.shields.io/badge/PRs-Welcome-orange?style=flat-square)
 
@@ -12,9 +12,9 @@
 
 ## Overview
 
-**QuantumAero** is an open-source, interactive web platform that models fluid dynamics, predicts boundary-layer turbulence transition probabilities ($P_{\text{turb}}$), and evaluates aerodynamic efficiency metrics ($C_L, C_D, L/D$) using **Quantum Machine Learning (QML)**, **Variational Quantum Circuits (VQC)**, and **Discrete Quantum Walks**.
+**QuantumAero** is an open-source, interactive web platform that models fluid dynamics, predicts boundary-layer turbulence transition probabilities ($P_{\text{turb}}$), validates potential flow pressure distributions against published NACA 0012/4412 reference polars, and evaluates aerodynamic efficiency metrics ($C_L, C_D, L/D$) using **Quantum Machine Learning (QML)**, **Variational Quantum Circuits (VQC)**, and **Discrete Quantum Walks**.
 
-The application is styled with a **1980s retro CRT terminal interface**, complete with real-time vector oscilloscope visualizers, mechanical toggle controls, Web Audio API sound synthesis, and interactive parameter tuning.
+The application features a restrained, professional scientific-tooling dark theme (inspired by Observable, Plotly Dash, and Grafana), complete with real-time vector field visualizers, precision parameter sliders, Web Audio API feedback, and full CSV/PNG/JSON export capabilities.
 
 ---
 
@@ -30,31 +30,28 @@ The application is styled with a **1980s retro CRT terminal interface**, complet
 - **Analytical Parameter-Shift Rule**: Computes exact quantum gradients using $g_j = \frac{L(\theta_j + \pi/2) - L(\theta_j - \pi/2)}{2}$ for true quantum optimization.
 - **Quantum Info Metrics**: Evaluates Pauli-Z expectation values $\langle Z_q \rangle$ and von Neumann Entanglement Entropy $S(\rho)$.
 
-### 2. Real Classical Baseline Neural Network (`ClassicalBaselineMLP`)
+### 2. NACA Experimental $C_p(x)$ Reference Validation
+- **Thin-Airfoil Pressure Distribution**: Computes surface pressure coefficient distributions $C_p(x) = 1 - (V(x)/U_\infty)^2$ across upper and lower airfoil bounds.
+- **Embedded Published Datasets**: Embedded NASA SP-428 and Abbott & Von Doenhoff / XFOIL 6.99 benchmark polars for NACA 0012 and NACA 4412.
+- **Statistical Error Metrics**: Surfaced Root-Mean-Square Error ($\text{RMSE}$) and goodness-of-fit ($R^2$) in an interactive modal report.
+
+### 3. Classical vs. Quantum Comparative Analytics
+- **Side-by-Side Model Comparison**: Compares classical potential-flow / Eppler turbulence prediction $P_{\text{classical}}$ against VQC quantum model $P_{\text{QML}}$.
+- **Regime Honesty Breakdown**: Quantifies absolute difference $|\Delta P|$ across laminar ($\alpha < 6^\circ$, $\Delta P < 0.04$) and high angle-of-attack separation regimes ($\alpha \ge 8^\circ$, $\Delta P \approx 0.15 - 0.35$).
+
+### 4. Real Classical Baseline Neural Network (`ClassicalBaselineMLP`)
 - Implements a 2-layer Multilayer Perceptron ($4 \rightarrow 8 \rightarrow 1$ architecture with ReLU and Sigmoid activations) trained using analytical backpropagation.
 - Evaluates real held-out validation loss against the VQC model during training.
 
-### 3. XFOIL Ground-Truth Aerodynamic Transition Data
-- Integrates empirical boundary-layer turbulence transition profiles derived from XFOIL 6.99 and Eppler models ([src/fixtures/xfoil_polars.json](file:///c:/quantumaero/src/fixtures/xfoil_polars.json)).
-- Replaces synthetic heuristic targets with ground-truth polar data for model validation.
+### 5. Data Export & Reproducibility
+- **CSV Flowfield Export**: Generates grid point CSV of $(x, y, u, v, |V|, C_p, P_{\text{classical}}, P_{\text{QML}})$.
+- **PNG Snapshot**: Exports canvas visualizer state as high-resolution image.
+- **JSON Config Export**: Exports shareable configuration schema for 100% reproducible simulation runs.
 
-### 4. Reconciled Potential Flow & Aerodynamics Solver
-- **Parametric Wing Profiles**:
-  - **NACA 0012**: Symmetric airfoil profile ($t = 0.12$).
-  - **NACA 4412**: Cambered airfoil profile ($t = 0.12$).
-  - **Supercritical 64A215**: Transonic high-speed jetliner profile ($t = 0.14$).
-  - **Delta Wing**: High Angle of Attack vortex lift profile ($t = 0.08$).
-- **Reconciled Aerodynamics**: Unified lift coefficient ($C_L$) calculation with zero-lift angle offsets $\alpha_0$ and non-linear stall roll-offs ($\alpha > 14^\circ$).
-- **Dynamic Skin Friction**: Form factor friction drag $C_{D,f} = 2 C_f (1 + 2t)$ parameterized dynamically by actual thickness ratio $t$.
-
-### 5. Quantum Walk (QW) Transport Emulator
-- Simulates discrete 1D/2D Quantum Walks with Hadamard coin operators.
-- Demonstrates ballistic quantum spatial propagation ($\sigma \propto t$) vs classical Gaussian diffusion ($\sigma \propto \sqrt{t}$).
-
-### 6. 1980s Retro CRT Interface & Web Audio Synthesizer
-- **3 Color Palettes**: Phosphor Green (1980s Mainframe), Amber Command (1970s Radar), Synthwave Cyber (1984 Cyberpunk).
-- **CRT Raster Visualizer**: Real-time 60 FPS HTML5 Canvas oscilloscope, scanline overlay, and phosphor decay trail effects.
-- **Web Audio API Synth**: Synthesizes mechanical switch clicks, analog knob adjustments, and alarm beeps dynamically.
+### 6. Professional Scientific Tooling Aesthetics
+- Restrained dark theme (`#0b0f19` background, `#111827` cards, `#38bdf8` sky blue accent).
+- Strict typography division: `Inter` (sans-serif) for labels and controls, `JetBrains Mono` for numerical telemetry.
+- Theory & Math Documentation panel explaining Bernoulli $C_p$, VQC physics, and the Parameter-Shift Rule.
 
 ---
 
@@ -97,7 +94,7 @@ The application is styled with a **1980s retro CRT terminal interface**, complet
 
 ## Testing
 
-QuantumAero includes an automated Vitest test suite covering quantum gate unitarity, parameter-shift optimization, classical MLP backpropagation, ground-truth XFOIL fixture loading, and aerodynamic solver integrity.
+QuantumAero includes an automated Vitest test suite covering quantum gate unitarity, parameter-shift optimization, classical MLP backpropagation, ground-truth XFOIL fixture loading, NACA reference validation, and aerodynamic solver integrity.
 
 To execute tests:
 ```bash
@@ -108,12 +105,12 @@ Expected Output:
 ```text
  RUN  v4.1.10 C:/quantumaero
 
- ✓ src/engine/fluidSolver.test.ts (3 tests)
+ ✓ src/engine/fluidSolver.test.ts (4 tests)
  ✓ src/engine/quantumEngine.test.ts (5 tests)
- ✓ src/engine/qmlModel.test.ts (5 tests)
+ ✓ src/engine/qmlModel.test.ts (6 tests)
 
  Test Files  3 passed (3)
-      Tests  13 passed (13)
+      Tests  15 passed (15)
 ```
 
 ---
@@ -127,22 +124,26 @@ quantumaero/
 │       └── verify-quantum-gate/   # Reusable engine verification skill
 ├── src/
 │   ├── components/
-│   │   ├── CanvasViewport.tsx     # 60 FPS Vector Oscilloscope Canvas
-│   │   ├── ControlsSidebar.tsx    # Mechanical switches & analog sliders
-│   │   └── BottomPanel.tsx        # Vector circuit & phosphor charts
+│   │   ├── CanvasViewport.tsx     # Vector Field Visualizer Canvas
+│   │   ├── ControlsSidebar.tsx    # Parameter sliders & export tools
+│   │   ├── BottomPanel.tsx        # Vector circuit & comparative analytics
+│   │   ├── ValidationModal.tsx    # NACA Cp reference validation report
+│   │   └── TheoryModal.tsx        # Theory & math documentation panel
 │   ├── engine/
 │   │   ├── quantumEngine.ts       # Statevector simulator, VQC & QW
 │   │   ├── quantumEngine.test.ts  # Gate unitarity & normalization tests
 │   │   ├── fluidSolver.ts         # NACA airfoils & potential flow solver
-│   │   ├── fluidSolver.test.ts    # Reconciled Cl & thickness ratio tests
+│   │   ├── fluidSolver.test.ts    # Reconciled Cl & Cp validation tests
 │   │   ├── qmlModel.ts            # QML predictor & ClassicalBaselineMLP
-│   │   └── qmlModel.test.ts       # Parameter-shift & XFOIL fixture tests
+│   │   ├── qmlModel.test.ts       # Parameter-shift & XFOIL fixture tests
+│   │   └── referenceData.ts       # Published NACA Cp reference datasets
 │   ├── fixtures/
 │   │   └── xfoil_polars.json      # XFOIL ground-truth transition polars
 │   ├── utils/
-│   │   └── retroAudio.ts          # Web Audio API sound synthesizer
-│   ├── App.tsx                    # Main Retro CRT Terminal Shell
-│   ├── index.css                  # CRT scanlines & phosphor themes
+│   │   ├── audioSynth.ts          # Web Audio API feedback synthesizer
+│   │   └── exportUtils.ts         # CSV, PNG, and JSON export utilities
+│   ├── App.tsx                    # Scientific Simulation Suite Shell
+│   ├── index.css                  # Scientific design system & tokens
 │   └── main.tsx                   # React entry point
 ├── LICENSE                        # MIT Open Source License
 ├── index.html
@@ -158,14 +159,13 @@ quantumaero/
 Contributions are welcome from the quantum computing, aerospace engineering, and web development communities.
 
 1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/quantum-gate`).
-3. Ensure all tests pass (`npm test`).
-4. Commit your changes (`git commit -m "Add feature"`).
-5. Push to the branch (`git push origin feature/quantum-gate`).
-6. Open a Pull Request.
+2. Create a feature branch (`git checkout -b feature/quantum-solver`).
+3. Commit your changes (`git commit -m 'Add physics-informed ansatz'`).
+4. Push to the branch (`git push origin feature/quantum-solver`).
+5. Open a Pull Request.
 
 ---
 
 ## License
 
-Distributed under the **MIT License**. See [LICENSE](file:///c:/quantumaero/LICENSE) for more information.
+Distributed under the MIT License. See [LICENSE](file:///c:/quantumaero/LICENSE) for details.

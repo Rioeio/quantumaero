@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react'
-import { retroAudio } from '../utils/retroAudio'
+import { audioSynth } from '../utils/audioSynth'
 
 interface Props {
   alpha: number; setAlpha: Dispatch<SetStateAction<number>>
@@ -42,7 +42,7 @@ function ParameterSlider({
       <input
         type="range" min={min} max={max} step={step} value={value}
         onChange={e => {
-          retroAudio.playClick();
+          audioSynth.playClick();
           onChange(Number(e.target.value))
         }}
         className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400"
@@ -96,7 +96,7 @@ export default function ControlsSidebar(props: Props) {
           <select
             value={vqcAnsatz}
             onChange={e => {
-              retroAudio.playSwitch();
+              audioSynth.playSwitch();
               props.setVqcAnsatz(e.target.value)
             }}
             className="bg-[#0b0f19] border border-slate-800 text-slate-200 rounded p-2 text-xs font-sans outline-none cursor-pointer focus:border-sky-500 transition-colors"
@@ -111,7 +111,7 @@ export default function ControlsSidebar(props: Props) {
         <button
           disabled={isTraining}
           onClick={() => {
-            retroAudio.playBeep();
+            audioSynth.playBeep();
             props.onTrain();
           }}
           className={`w-full mt-2 py-2.5 rounded font-semibold text-xs tracking-wide transition-all cursor-pointer ${
@@ -131,7 +131,7 @@ export default function ControlsSidebar(props: Props) {
             <button
               key={m.id}
               onClick={() => {
-                retroAudio.playSwitch();
+                audioSynth.playSwitch();
                 props.setViewMode(m.id);
               }}
               className={`py-2 px-2.5 rounded border text-[11px] font-medium transition-all cursor-pointer ${
@@ -151,13 +151,13 @@ export default function ControlsSidebar(props: Props) {
         <div className="flex flex-col gap-2">
           <button
             onClick={props.onOpenValidation}
-            className="w-full py-2 px-2.5 rounded bg-slate-800 text-sky-400 hover:bg-slate-700 font-medium text-[11px] transition-colors text-left"
+            className="w-full py-2 px-2.5 rounded bg-slate-800 text-sky-400 hover:bg-slate-700 font-medium text-[11px] transition-colors text-left cursor-pointer"
           >
             NACA Cp Reference Validation
           </button>
           <button
             onClick={props.onOpenTheory}
-            className="w-full py-2 px-2.5 rounded bg-slate-800 text-slate-200 hover:bg-slate-700 font-medium text-[11px] transition-colors text-left"
+            className="w-full py-2 px-2.5 rounded bg-slate-800 text-slate-200 hover:bg-slate-700 font-medium text-[11px] transition-colors text-left cursor-pointer"
           >
             Theory & Math Documentation
           </button>
