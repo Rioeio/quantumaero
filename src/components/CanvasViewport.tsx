@@ -12,7 +12,6 @@ export interface CanvasViewportProps {
   LD: number
   turbulenceRisk: number
   stallWarning: boolean
-  theme: 'green' | 'amber' | 'synthwave'
 }
 
 /* ─── NACA 4-digit geometry (cosine spacing) ─── */
@@ -96,23 +95,14 @@ export default function CanvasViewport(props: CanvasViewportProps) {
     particles.current = Array.from({ length: N_PARTICLES }, (_, i) => spawnParticle(i))
 
     function frame() {
-      const { airfoil, alpha: aoaDeg, airspeed, viewMode, isRunning, CL, stallWarning, theme } = propsRef.current
+      const { airfoil, alpha: aoaDeg, airspeed, viewMode, isRunning, CL, stallWarning } = propsRef.current
       const Uinf = airspeed / 60
 
-      // Color Theme Tokens
-      let mainColor = '#00ffaa'
-      let glowColor = 'rgba(0, 255, 170, 0.4)'
-      let bgColor = '#030a06'
-
-      if (theme === 'amber') {
-        mainColor = '#ffaa00'
-        glowColor = 'rgba(255, 170, 0, 0.4)'
-        bgColor = '#0c0702'
-      } else if (theme === 'synthwave') {
-        mainColor = '#ff007f'
-        glowColor = 'rgba(255, 0, 128, 0.4)'
-        bgColor = '#08030c'
-      }
+      /* Restrained Scientific Color Tokens */
+      const accentColor = '#38bdf8'     // Sky Blue 400
+      const accentSecondary = '#818cf8' // Indigo 400
+      const bgColor = '#0b0f19'         // Slate 950
+      const gridColor = '#1e293b'       // Slate 800
 
       /* ── Canvas sizing ── */
       const rect = canvas.getBoundingClientRect()
@@ -129,15 +119,15 @@ export default function CanvasViewport(props: CanvasViewportProps) {
       const toX = (nx: number) => nx * scale + ox
       const toY = (ny: number) => -ny * scale + oy
 
-      /* ── Clear CRT Screen ── */
+      /* ── Clean Background ── */
       ctx.fillStyle = bgColor
       ctx.fillRect(0, 0, W, H)
 
-      /* ── Retro Oscilloscope Grid ── */
+      /* ── Scientific Coordinate Grid ── */
       const gs = 0.1 * scale
-      ctx.strokeStyle = glowColor
-      ctx.lineWidth = 0.5
-      ctx.globalAlpha = 0.15
+      ctx.strokeStyle = gridColor
+      ctx.lineWidth = 1.0
+      ctx.globalAlpha = 0.6
 
       for (let x = ((ox % gs) + gs) % gs; x <= W; x += gs) {
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke()
@@ -147,14 +137,14 @@ export default function CanvasViewport(props: CanvasViewportProps) {
       }
       ctx.globalAlpha = 1.0
 
-      /* Center Reticle Crosshair */
-      ctx.strokeStyle = mainColor
-      ctx.lineWidth = 0.8
+      /* Center Chord Line / Axis */
+      ctx.strokeStyle = '#334155'
+      ctx.lineWidth = 1.2
       ctx.setLineDash([4, 4])
-      ctx.beginPath(); ctx.moveTo(toX(-0.3), toY(0)); ctx.lineTo(toX(1.35), toY(0)); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(toX(-0.35), toY(0)); ctx.lineTo(toX(1.45), toY(0)); ctx.stroke()
       ctx.setLineDash([])
 
-      /* ── Heatmap Modes (Vector CRT Shader simulation) ── */
+      /* ── Heatmap Modes (Scientific Continuous Color Shader) ── */
       if (viewMode === 'pressure' || viewMode === 'turbulence') {
         const step = 8
         for (let py = 0; py < H; py += step) {
@@ -166,15 +156,15 @@ export default function CanvasViewport(props: CanvasViewportProps) {
               if (viewMode === 'pressure') {
                 const cp = calcCp(nx, ny, aoaDeg, Uinf, CL)
                 if (cp < -0.2) {
-                  ctx.fillStyle = mainColor
-                  ctx.globalAlpha = Math.min(0.35, Math.abs(cp) * 0.12)
+                  ctx.fillStyle = accentColor
+                  ctx.globalAlpha = Math.min(0.28, Math.abs(cp) * 0.1)
                   ctx.fillRect(px, py, step - 1, step - 1)
                 }
               } else if (viewMode === 'turbulence') {
                 const tp = calcTurbP(nx, ny, aoaDeg)
                 if (tp > 0.15) {
-                  ctx.fillStyle = tp > 0.5 ? '#ff3366' : mainColor
-                  ctx.globalAlpha = tp * 0.4
+                  ctx.fillStyle = tp > 0.5 ? '#f43f5e' : accentColor
+                  ctx.globalAlpha = tp * 0.35
                   ctx.fillRect(px, py, step - 1, step - 1)
                 }
               }
@@ -187,10 +177,8 @@ export default function CanvasViewport(props: CanvasViewportProps) {
       /* ── Quantum Walk Overlay ── */
       if (viewMode === 'quantumwalk') {
         const t = Date.now() / 600
-        ctx.strokeStyle = mainColor
-        ctx.shadowColor = mainColor
-        ctx.shadowBlur = 8
-        ctx.lineWidth = 1.5
+        ctx.strokeStyle = accentSecondary
+        ctx.lineWidth = 2.0
         ctx.beginPath()
 
         for (let i = 0; i < 100; i++) {
@@ -201,10 +189,9 @@ export default function CanvasViewport(props: CanvasViewportProps) {
           if (i === 0) ctx.moveTo(cx, cy); else ctx.lineTo(cx, cy)
         }
         ctx.stroke()
-        ctx.shadowBlur = 0
       }
 
-      /* ── Airfoil Geometry (Vector Wireframe) ── */
+      /* ── Airfoil Geometry (Precision Vector Outline) ── */
       const pts = nacaProfile(airfoil)
       ctx.save()
       ctx.translate(toX(0.25), toY(0))
@@ -218,25 +205,21 @@ export default function CanvasViewport(props: CanvasViewportProps) {
       })
       ctx.closePath()
 
-      // Airfoil Fill
-      ctx.fillStyle = bgColor
+      // Airfoil Fill & Edge Stroke
+      ctx.fillStyle = '#1e293b'
       ctx.fill()
 
-      // Glowing Vector Outline
-      ctx.shadowColor = mainColor
-      ctx.shadowBlur = 12
-      ctx.strokeStyle = mainColor
+      ctx.strokeStyle = accentColor
       ctx.lineWidth = 2.0
       ctx.stroke()
-      ctx.shadowBlur = 0
 
-      // Leading & Trailing Edge Nodes
-      ctx.beginPath(); ctx.arc(toX(0), toY(0), 4, 0, Math.PI * 2)
-      ctx.fillStyle = mainColor; ctx.fill()
+      // Leading & Trailing Edge Anchor Points
+      ctx.beginPath(); ctx.arc(toX(0), toY(0), 3.5, 0, Math.PI * 2)
+      ctx.fillStyle = accentColor; ctx.fill()
 
       ctx.restore()
 
-      /* ── Flow Particles (Vector Phosphor Traces) ── */
+      /* ── Flow Particles (Vector Streamlines) ── */
       if (isRunning) {
         particles.current.forEach((p, pi) => {
           const [u, v] = flowVel(p.x, p.y, aoaDeg, Uinf, CL)
@@ -262,36 +245,33 @@ export default function CanvasViewport(props: CanvasViewportProps) {
         for (let i = 1; i < p.trail.length; i++) {
           ctx.lineTo(toX(p.trail[i][0]), toY(p.trail[i][1]))
         }
-        ctx.strokeStyle = mainColor
-        ctx.lineWidth = 1.0
-        ctx.globalAlpha = 0.6
+        ctx.strokeStyle = accentColor
+        ctx.lineWidth = 1.2
+        ctx.globalAlpha = 0.5
         ctx.stroke()
 
         ctx.beginPath()
-        ctx.arc(toX(p.x), toY(p.y), 1.8, 0, Math.PI * 2)
-        ctx.fillStyle = mainColor
-        ctx.globalAlpha = 0.9
+        ctx.arc(toX(p.x), toY(p.y), 1.5, 0, Math.PI * 2)
+        ctx.fillStyle = accentColor
+        ctx.globalAlpha = 0.85
         ctx.fill()
       })
       ctx.globalAlpha = 1.0
 
-      /* ── Vector Telemetry Labels ── */
-      ctx.font = '14px VT323, monospace'
-      ctx.fillStyle = mainColor
-      ctx.fillText(`AIRFOIL: ${airfoil.toUpperCase()}`, 16, 26)
-      ctx.fillText(`ALPHA: ${aoaDeg.toFixed(1)} DEG`, 16, 44)
-      ctx.fillText(`MACH: ${(airspeed / 340).toFixed(3)}`, 16, 62)
+      /* ── Clean Scientific Viewport Labels ── */
+      ctx.font = '500 12px Inter, sans-serif'
+      ctx.fillStyle = '#94a3b8'
+      ctx.fillText(`Airfoil: ${airfoil}`, 16, 26)
+      ctx.fillText(`AoA: ${aoaDeg.toFixed(1)}°`, 16, 44)
+      ctx.fillText(`Mach: ${(airspeed / 340).toFixed(3)}`, 16, 62)
 
-      /* ── Stall Alarm Warning ── */
+      /* ── Separation Stall Alert Badge ── */
       if (stallWarning) {
-        const flash = Math.sin(Date.now() / 150) > 0
-        if (flash) {
-          ctx.fillStyle = '#ff3366'
-          ctx.font = 'bold 20px VT323, monospace'
-          ctx.textAlign = 'center'
-          ctx.fillText('! WARNING: SEPARATION STALL DETECTED !', W / 2, 40)
-          ctx.textAlign = 'left'
-        }
+        ctx.fillStyle = '#f43f5e'
+        ctx.font = '600 13px Inter, sans-serif'
+        ctx.textAlign = 'center'
+        ctx.fillText('SEPARATION STALL DETECTED', W / 2, 32)
+        ctx.textAlign = 'left'
       }
 
       rafRef.current = requestAnimationFrame(frame)
@@ -301,30 +281,38 @@ export default function CanvasViewport(props: CanvasViewportProps) {
     return () => cancelAnimationFrame(rafRef.current)
   }, [])
 
-  const { CL, CD, LD, turbulenceRisk } = props
+  const { CL, CD, LD, turbulenceRisk, stallWarning } = props
 
   return (
-    <div className="relative w-full h-full bg-[#030a06] crt-overlay">
+    <div className="relative w-full h-full bg-[#0b0f19] overflow-hidden">
       <canvas ref={canvasRef} className="w-full h-full block" />
 
-      {/* Retro VFD Telemetry HUD Cards */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2 font-mono text-xs">
-        <RetroHudBox label="LIFT (C_L)" value={CL.toFixed(3)} />
-        <RetroHudBox label="DRAG (C_D)" value={CD.toFixed(4)} />
-        <RetroHudBox label="L/D RATIO" value={LD.toFixed(2)} highlight />
-        <RetroHudBox label="P_TURB RISK" value={`${turbulenceRisk.toFixed(0)}%`} alert={turbulenceRisk > 60} />
+      {/* Persistent Scientific Telemetry Readout Panel */}
+      <div className="absolute top-4 right-4 flex flex-col gap-2 font-sans text-xs">
+        <TelemetryMetricCard label="LIFT COEFF (C_L)" value={CL.toFixed(3)} />
+        <TelemetryMetricCard label="DRAG COEFF (C_D)" value={CD.toFixed(4)} />
+        <TelemetryMetricCard label="LIFT/DRAG (L/D)" value={LD.toFixed(2)} highlight />
+        <TelemetryMetricCard
+          label="TURBULENCE RISK"
+          value={`${turbulenceRisk.toFixed(0)}%`}
+          alert={turbulenceRisk > 60 || stallWarning}
+        />
       </div>
     </div>
   )
 }
 
-function RetroHudBox({ label, value, highlight, alert }: { label: string; value: string; highlight?: boolean; alert?: boolean }) {
+function TelemetryMetricCard({ label, value, highlight, alert }: { label: string; value: string; highlight?: boolean; alert?: boolean }) {
   return (
-    <div className={`px-3 py-1.5 border bg-black/80 backdrop-blur-md min-w-[110px] ${
-      alert ? 'border-red-500 text-red-500 shadow-[0_0_10px_#ff0033]' : highlight ? 'border-[var(--phosphor-main)] text-[var(--phosphor-main)] shadow-[0_0_10px_var(--phosphor-main)]' : 'border-[var(--border-crt)] text-[var(--phosphor-main)]'
+    <div className={`px-3 py-2 rounded border bg-[#111827]/90 backdrop-blur-sm min-w-[140px] flex flex-col gap-0.5 ${
+      alert
+        ? 'border-rose-500/60 text-rose-400'
+        : highlight
+        ? 'border-sky-500/60 text-sky-400'
+        : 'border-slate-800 text-slate-300'
     }`}>
-      <div className="text-[10px] opacity-70 tracking-widest">{label}</div>
-      <div className="text-base font-bold font-mono tracking-wider">{value}</div>
+      <div className="text-[10px] font-medium tracking-wide uppercase text-slate-400">{label}</div>
+      <div className="text-sm font-semibold font-mono text-slate-100">{value}</div>
     </div>
   )
 }

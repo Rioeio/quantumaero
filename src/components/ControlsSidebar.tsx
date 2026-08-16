@@ -18,7 +18,7 @@ function fmtRe(re: number): string {
   return `${(re / 1e3).toFixed(0)}K`
 }
 
-function RetroSlider({
+function ParameterSlider({
   label, unit, value, min, max, step = 0.1, fmt,
   onChange,
 }: {
@@ -27,10 +27,10 @@ function RetroSlider({
 }) {
   const display = fmt ? fmt(value) : value.toFixed(step < 1 ? 1 : 0)
   return (
-    <div className="flex flex-col gap-1.5 font-mono text-xs">
-      <div className="flex justify-between items-baseline">
-        <span className="opacity-70 text-[11px] uppercase tracking-wider">{label}</span>
-        <span className="font-bold text-sm text-[var(--phosphor-main)]">
+    <div className="flex flex-col gap-1.5 font-sans text-xs">
+      <div className="flex justify-between items-center">
+        <span className="text-slate-400 font-medium text-[11px] uppercase tracking-wider">{label}</span>
+        <span className="font-semibold font-mono text-xs text-sky-400">
           {display}{unit}
         </span>
       </div>
@@ -40,17 +40,17 @@ function RetroSlider({
           retroAudio.playClick();
           onChange(Number(e.target.value))
         }}
-        className="w-full accent-[var(--phosphor-main)] cursor-pointer"
+        className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400"
       />
     </div>
   )
 }
 
 const VIEW_MODES = [
-  { id: 'streamlines', label: 'STREAMLINES' },
-  { id: 'pressure', label: 'PRESS. CP' },
-  { id: 'turbulence', label: 'QML TURB.' },
-  { id: 'quantumwalk', label: 'Q-WALK' },
+  { id: 'streamlines', label: 'Streamlines' },
+  { id: 'pressure', label: 'Pressure Cp' },
+  { id: 'turbulence', label: 'QML Turb.' },
+  { id: 'quantumwalk', label: 'Quantum Walk' },
 ]
 
 const ANSATZ_OPTIONS = ['RealAmplitudes', 'StronglyEntangling', 'Physics-Informed (QPINN)']
@@ -59,49 +59,49 @@ export default function ControlsSidebar(props: Props) {
   const { alpha, reynolds, airspeed, vqcAnsatz, qubits, circuitDepth, viewMode, isTraining, trainEpoch } = props
 
   return (
-    <div className="bg-[var(--surface-crt)] border-r border-[var(--border-crt)] flex flex-col h-full overflow-y-auto p-3 gap-4 font-mono">
+    <div className="bg-[#111827] border-r border-slate-800 flex flex-col h-full overflow-y-auto p-4 gap-5 font-sans text-xs">
       {/* ── Section: Aerodynamic Controls ── */}
-      <RetroSection label="[ AERODYNAMIC CONSTRAINTS ]">
-        <RetroSlider
-          label="ALPHA (AoA)"
+      <ControlSection label="Aerodynamic Parameters">
+        <ParameterSlider
+          label="Angle of Attack (α)"
           unit="°"
           value={alpha} min={-5} max={20} step={0.5}
           onChange={props.setAlpha}
         />
-        <RetroSlider
-          label="REYNOLDS (Re)"
+        <ParameterSlider
+          label="Reynolds Number (Re)"
           unit=""
           value={reynolds} min={100000} max={5000000} step={50000}
           fmt={fmtRe}
           onChange={props.setReynolds}
         />
-        <RetroSlider
-          label="AIRSPEED (V_INF)"
+        <ParameterSlider
+          label="Airspeed (V∞)"
           unit=" m/s"
           value={airspeed} min={10} max={150} step={1}
           fmt={v => v.toFixed(0)}
           onChange={props.setAirspeed}
         />
-      </RetroSection>
+      </ControlSection>
 
-      {/* ── Section: QML Registers ── */}
-      <RetroSection label="[ QML REGISTER CONFIG ]">
-        <div className="flex flex-col gap-1 text-xs">
-          <span className="opacity-70 text-[10px] uppercase">ANSATZ TOPOLOGY</span>
+      {/* ── Section: QML Register Config ── */}
+      <ControlSection label="QML Circuit Configuration">
+        <div className="flex flex-col gap-1.5">
+          <span className="text-slate-400 font-medium text-[11px] uppercase tracking-wider">Ansatz Topology</span>
           <select
             value={vqcAnsatz}
             onChange={e => {
               retroAudio.playSwitch();
               props.setVqcAnsatz(e.target.value)
             }}
-            className="bg-black border border-[var(--border-crt)] text-[var(--phosphor-main)] p-1 text-xs font-mono outline-none cursor-pointer"
+            className="bg-[#0b0f19] border border-slate-800 text-slate-200 rounded p-2 text-xs font-sans outline-none cursor-pointer focus:border-sky-500 transition-colors"
           >
             {ANSATZ_OPTIONS.map(a => <option key={a} value={a}>{a}</option>)}
           </select>
         </div>
 
-        <RetroSlider label="QUBITS (N)" unit="" value={qubits} min={2} max={6} step={1} fmt={v => v.toFixed(0)} onChange={props.setQubits} />
-        <RetroSlider label="DEPTH (L)" unit="" value={circuitDepth} min={1} max={6} step={1} fmt={v => v.toFixed(0)} onChange={props.setCircuitDepth} />
+        <ParameterSlider label="Qubits (N)" unit="" value={qubits} min={2} max={6} step={1} fmt={v => v.toFixed(0)} onChange={props.setQubits} />
+        <ParameterSlider label="Circuit Depth (L)" unit="" value={circuitDepth} min={1} max={6} step={1} fmt={v => v.toFixed(0)} onChange={props.setCircuitDepth} />
 
         <button
           disabled={isTraining}
@@ -109,16 +109,18 @@ export default function ControlsSidebar(props: Props) {
             retroAudio.playBeep();
             props.onTrain();
           }}
-          className={`w-full mt-2 py-2 border font-bold text-xs tracking-widest transition-all cursor-pointer ${
-            isTraining ? 'bg-black text-amber-400 border-amber-400 animate-pulse' : 'bg-black border-[var(--phosphor-main)] text-[var(--phosphor-main)] hover:bg-[var(--phosphor-main)] hover:text-black shadow-[0_0_10px_var(--phosphor-main)]'
+          className={`w-full mt-2 py-2.5 rounded font-semibold text-xs tracking-wide transition-all cursor-pointer ${
+            isTraining
+              ? 'bg-slate-800 text-amber-400 border border-amber-500/50 animate-pulse'
+              : 'bg-sky-500 text-slate-950 hover:bg-sky-400 active:bg-sky-600 shadow-sm'
           }`}
         >
-          {isTraining ? `[ EXECUTING... ${trainEpoch}/50 ]` : '[ EXECUTE QML OPTIMIZE ]'}
+          {isTraining ? `Executing... Epoch ${trainEpoch}/50` : 'Execute QML Optimization'}
         </button>
-      </RetroSection>
+      </ControlSection>
 
-      {/* ── Section: Visualization Mode ── */}
-      <RetroSection label="[ DISPLAY MODE SELECT ]">
+      {/* ── Section: Field Display Mode ── */}
+      <ControlSection label="Field Viewport Mode">
         <div className="grid grid-cols-2 gap-2">
           {VIEW_MODES.map(m => (
             <button
@@ -127,31 +129,30 @@ export default function ControlsSidebar(props: Props) {
                 retroAudio.playSwitch();
                 props.setViewMode(m.id);
               }}
-              className={`py-1.5 px-2 border text-[11px] font-bold tracking-wider transition-all cursor-pointer ${
+              className={`py-2 px-2.5 rounded border text-[11px] font-medium transition-all cursor-pointer ${
                 viewMode === m.id
-                  ? 'bg-[var(--phosphor-main)] text-black border-[var(--phosphor-main)] shadow-[0_0_10px_var(--phosphor-main)]'
-                  : 'bg-black text-[var(--phosphor-main)] border-[var(--border-crt)] opacity-70 hover:opacity-100'
+                  ? 'bg-sky-500/10 text-sky-400 border-sky-500/60 font-semibold'
+                  : 'bg-[#0b0f19] text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
               }`}
             >
               {m.label}
             </button>
           ))}
         </div>
-      </RetroSection>
+      </ControlSection>
 
-      <div className="mt-auto pt-2 border-t border-[var(--border-crt)] text-[10px] opacity-60">
-        <div>SYS.SYSSTATUS: OK</div>
-        <div>VQC REGISTER: READY</div>
-        <div>CLOCK: 8080-REV4</div>
+      <div className="mt-auto pt-3 border-t border-slate-800/80 text-[11px] text-slate-500 flex flex-col gap-1 font-mono">
+        <div>Engine: Quantum Engine Rev-4</div>
+        <div>Status: System Normal</div>
       </div>
     </div>
   )
 }
 
-function RetroSection({ label, children }: { label: string; children: React.ReactNode }) {
+function ControlSection({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-2.5 border border-[var(--border-crt)] p-2.5 bg-black/40">
-      <div className="text-[11px] font-bold text-[var(--phosphor-main)] tracking-widest border-b border-[var(--border-crt)] pb-1">
+    <div className="flex flex-col gap-3 border border-slate-800 p-3.5 rounded-lg bg-[#0b0f19]/60">
+      <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider border-b border-slate-800/80 pb-1.5">
         {label}
       </div>
       {children}

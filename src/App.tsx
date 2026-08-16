@@ -12,10 +12,8 @@ const AIRFOIL_PRESETS = [
 ]
 
 export default function App() {
-  // Retro Aesthetics State
-  const [theme, setTheme] = useState<'green' | 'amber' | 'synthwave'>('green')
-  const [scanlines, setScanlines] = useState<boolean>(true)
-  const [audioEnabled, setAudioEnabled] = useState<boolean>(true)
+  // Scientific UI State
+  const [audioEnabled, setAudioEnabled] = useState<boolean>(false)
 
   // Aerodynamic parameters
   const [airfoil, setAirfoil] = useState('NACA 4412')
@@ -38,12 +36,7 @@ export default function App() {
   const [trainEpoch, setTrainEpoch] = useState(0)
   const [lossHistory, setLossHistory] = useState<{ vqc: number; classical: number }[]>([])
 
-  // Apply Theme CSS class to body
-  useEffect(() => {
-    document.body.className = `theme-${theme}`
-  }, [theme])
-
-  // Sync audio toggle
+  // Sync audio toggle state
   useEffect(() => {
     retroAudio.enabled = audioEnabled
   }, [audioEnabled])
@@ -58,7 +51,7 @@ export default function App() {
   const LD = CL / CD
   const turbulenceRisk = Math.min(99, Math.max(2, 15 + 1.2 * Math.max(0, alpha) + 10 * Math.log10(reynolds / 1e5) + (isStalled ? 45 : 0)))
 
-  // Live training effect
+  // Live training optimization execution
   const handleTrain = () => {
     setIsTraining(true)
     setTrainEpoch(0)
@@ -84,82 +77,59 @@ export default function App() {
   }
 
   return (
-    <div
-      className={`grid grid-rows-[42px_1fr_200px] w-screen h-screen bg-[var(--bg-crt)] overflow-hidden font-mono ${
-        scanlines ? 'crt-scanlines' : ''
-      }`}
-    >
-      {/* ── Retro CRT Header Bar ── */}
-      <header className="bg-[var(--surface-crt)] border-b border-[var(--border-crt)] flex items-center justify-between px-4 z-50 text-xs">
+    <div className="grid grid-rows-[44px_1fr_210px] w-screen h-screen bg-[#0b0f19] text-slate-100 overflow-hidden font-sans">
+      {/* ── Modern Scientific Header Bar ── */}
+      <header className="bg-[#111827] border-b border-slate-800 flex items-center justify-between px-4 z-50 text-xs">
         {/* Brand */}
         <div className="flex items-center gap-3">
-          <div className="w-5 h-5 bg-[var(--phosphor-main)] text-black font-bold flex items-center justify-center text-xs shadow-[0_0_10px_var(--phosphor-main)]">
+          <div className="w-6 h-6 rounded bg-sky-500 text-slate-950 font-bold flex items-center justify-center text-xs shadow-sm">
             Q
           </div>
-          <span className="font-bold tracking-widest text-[var(--phosphor-main)] text-sm glow-text">
-            QUANTUM-AERO // MARK-IV TERMINAL
-          </span>
-          <span className="text-[10px] opacity-60">SYS.REV-1984.08</span>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold tracking-wide text-slate-100 text-sm">
+              QUANTUMAERO
+            </span>
+            <span className="text-slate-500 font-mono text-[11px]">| Quantum Aerodynamics Suite</span>
+          </div>
         </div>
 
-        {/* Profile presets */}
+        {/* Profile Preset Selectors */}
         <div className="flex items-center gap-2">
-          <span className="opacity-70 text-[10px]">PROFILE:</span>
-          {AIRFOIL_PRESETS.map(p => (
-            <button
-              key={p}
-              onClick={() => {
-                retroAudio.playClick()
-                setAirfoil(p)
-              }}
-              className={`px-2 py-0.5 border text-[10px] font-bold transition-all cursor-pointer ${
-                airfoil === p
-                  ? 'bg-[var(--phosphor-main)] text-black border-[var(--phosphor-main)]'
-                  : 'bg-black text-[var(--phosphor-main)] border-[var(--border-crt)] opacity-70 hover:opacity-100'
-              }`}
-            >
-              {p}
-            </button>
-          ))}
+          <span className="text-slate-400 font-medium text-[11px] uppercase tracking-wider">Profile:</span>
+          <div className="flex items-center gap-1 bg-[#0b0f19] p-1 rounded border border-slate-800">
+            {AIRFOIL_PRESETS.map(p => (
+              <button
+                key={p}
+                onClick={() => {
+                  retroAudio.playClick()
+                  setAirfoil(p)
+                }}
+                className={`px-2.5 py-1 rounded text-[11px] font-medium transition-all cursor-pointer ${
+                  airfoil === p
+                    ? 'bg-sky-500/20 text-sky-400 border border-sky-500/50 font-semibold'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Retro Palette & CRT Toggles */}
+        {/* System Controls */}
         <div className="flex items-center gap-3">
-          <select
-            value={theme}
-            onChange={(e) => {
-              retroAudio.playSwitch()
-              setTheme(e.target.value as any)
-            }}
-            className="bg-black border border-[var(--border-crt)] text-[var(--phosphor-main)] text-[10px] px-2 py-0.5 outline-none cursor-pointer font-mono"
-          >
-            <option value="green">PHOSPHOR GREEN</option>
-            <option value="amber">AMBER COMMAND</option>
-            <option value="synthwave">SYNTHWAVE CYBER</option>
-          </select>
-
-          <button
-            onClick={() => {
-              retroAudio.playSwitch()
-              setScanlines(!scanlines)
-            }}
-            className={`px-2 py-0.5 border text-[10px] font-bold cursor-pointer ${
-              scanlines ? 'bg-[var(--phosphor-main)] text-black' : 'bg-black text-[var(--phosphor-main)] border-[var(--border-crt)]'
-            }`}
-          >
-            CRT SCANLINES
-          </button>
-
           <button
             onClick={() => {
               setAudioEnabled(!audioEnabled)
               retroAudio.playClick()
             }}
-            className={`px-2 py-0.5 border text-[10px] font-bold cursor-pointer ${
-              audioEnabled ? 'bg-[var(--phosphor-main)] text-black' : 'bg-black text-[var(--phosphor-main)] border-[var(--border-crt)]'
+            className={`px-2.5 py-1 rounded border text-[11px] font-medium cursor-pointer transition-colors ${
+              audioEnabled
+                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 font-semibold'
+                : 'bg-[#0b0f19] text-slate-400 border-slate-800 hover:text-slate-200'
             }`}
           >
-            {audioEnabled ? 'AUDIO ON' : 'AUDIO MUTE'}
+            {audioEnabled ? 'Audio On' : 'Audio Off'}
           </button>
 
           <button
@@ -167,15 +137,19 @@ export default function App() {
               retroAudio.playSwitch()
               setIsRunning(!isRunning)
             }}
-            className="px-3 py-0.5 border border-[var(--border-crt)] bg-black text-[var(--phosphor-main)] font-bold text-[10px] cursor-pointer hover:bg-[var(--phosphor-main)] hover:text-black"
+            className={`px-3 py-1 rounded border text-[11px] font-medium cursor-pointer transition-colors ${
+              isRunning
+                ? 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700'
+                : 'bg-sky-500 text-slate-950 border-sky-400 font-semibold hover:bg-sky-400'
+            }`}
           >
-            {isRunning ? '⏸ PAUSE' : '▶ RUN'}
+            {isRunning ? 'Pause Simulation' : 'Run Simulation'}
           </button>
         </div>
       </header>
 
       {/* ── Main Viewport (Sidebar + Canvas) ── */}
-      <div className="grid grid-cols-[250px_1fr] overflow-hidden">
+      <div className="grid grid-cols-[260px_1fr] overflow-hidden">
         <ControlsSidebar
           alpha={alpha} setAlpha={setAlpha}
           reynolds={reynolds} setReynolds={setReynolds}
@@ -200,7 +174,6 @@ export default function App() {
           LD={LD}
           turbulenceRisk={turbulenceRisk}
           stallWarning={isStalled}
-          theme={theme}
         />
       </div>
 

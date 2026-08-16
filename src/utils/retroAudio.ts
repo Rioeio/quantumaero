@@ -1,6 +1,6 @@
 class RetroAudio {
   private ctx: AudioContext | null = null;
-  public enabled: boolean = true;
+  public enabled: boolean = false;
 
   private initCtx() {
     if (!this.ctx) {
